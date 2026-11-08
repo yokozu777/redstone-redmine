@@ -1,0 +1,61 @@
+services:
+  redmine-db:
+    container_name: redmine-db    
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: redmine
+      POSTGRES_USER: redmine
+      POSTGRES_PASSWORD: redmine
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redmine -d redmine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redmine:
+    container_name: redmine
+    depends_on:
+      redmine-db:
+        condition: service_healthy
+    build:
+      context: ./
+      dockerfile: redmine.dockerfile
+      args:
+        INSTALL_CJK_FONTS: "false"  # true installs CJK fonts (~150MB)
+        # INSTALL_LIBREOFFICE: "false"  # saves ~500MB; DMSF will not convert docx/xlsx
+        INSTALL_LOCAL_CERT: "false"  # true installs certificates from ./certs
+        REMOTE_CA_URL: ""  # for example https://ca.mxhash.dev:8443/roots.pem
+        INSTALL_REDMINE_OAUTH: "true"
+        INSTALL_REDMINE_GITLAB_HOOK: "true"
+        INSTALL_REDMINE_DASHBOARD: "true"
+        INSTALL_OPALE: "true"
+        INSTALL_KANBAN: "true"
+        INSTALL_ADDITIONALS: "true"
+        INSTALL_ADDITIONAL_TAGS: "true"  # requires INSTALL_ADDITIONALS
+        INSTALL_REDMINE_INDICATOR: "true"
+        INSTALL_XLSX_EXPORTER: "true"
+        INSTALL_REDMINE_DMSF: "true"
+        INSTALL_REDMINE_STARTPAGE: "true"
+        INSTALL_REDMINE_BOTS: "true"
+        INSTALL_REDMINE_2FA: "true"  # requires INSTALL_REDMINE_BOTS
+    ports:
+      - "3000:3000"
+    environment:
+      REDMINE_DB_POSTGRES: redmine-db
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine
+      REDMINE_DB_PORT: "5432"
+      REDMINE_PLUGINS_MIGRATE: "true"
+    volumes:
+      - redmine_files:/usr/src/redmine/files
+
+volumes:
+  pgdata:
+    labels:
+      com.example.description: "PostgreSQL database volume"
+  redmine_files:
+    labels:
+      com.example.description: "Redmine uploaded files"

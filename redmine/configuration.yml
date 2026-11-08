@@ -1,0 +1,13 @@
+production:
+  email_delivery:
+    delivery_method: :smtp
+    smtp_settings:
+      address: "mail.mxhash.dev1"
+      port: 465
+      domain: "mxhash.dev1"
+      authentication: :login
+      user_name: "redmine@mxhash.dev1"
+      password: "change_me"
+      ssl: true
+      enable_starttls_auto: false
+      openssl_verify_mode: "peer"
